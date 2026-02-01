@@ -259,15 +259,17 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
             {filteredProducts.map(product => (
               <div 
-                keyOptimizedImage 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-full h-full group-hover:scale-110 transition-transform duration-700 ease-in-out" 
-                 
+                key={product.id}
                 className="group bg-white rounded-[4rem] overflow-hidden p-5 transition-all duration-500 border-2 border-transparent hover:border-demmy-gold/40 hover:scale-[1.03] hover:shadow-[0_40px_80px_rgba(10,92,54,0.1)]"
               >
                 <div className="relative h-80 overflow-hidden rounded-[3rem] mb-8">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />
+                  <OptimizedImage 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="w-full h-full group-hover:scale-110 transition-transform duration-700 ease-in-out" 
+                    width={400}
+                    height={320}
+                  />
                   
                   {/* Hover Tooltip / Detail Overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-6 glass-card border-none bg-white/70 backdrop-blur-md transform translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">

@@ -13,7 +13,6 @@ interface FormData {
   name: string;
   email: string;
   phone: string;
-  location: string;
   message: string;
 }
 
@@ -22,7 +21,6 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
     name: '',
     email: '',
     phone: '',
-    location: '',
     message: ''
   });
 
@@ -47,19 +45,39 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
       newErrors.phone = 'Please enter a valid phone number';
     }
     
-    if (!formData.location.trim()) {
-      newErrors.location = 'Please enter your location';
-    }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
+    }
+    
+    // Prepare data payload for Zapier
+    const zapierPayload = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      message: formData.message,
+      mode: mode,
+      productName: productName || 'N/A',
+      timestamp: new Date().toISOString()
+    };
+    
+    // Send data to Zapier webhook (non-blocking)
+    try {
+      fetch('https://hooks.zapier.com/hooks/catch/23481197/ulimrqf/', {
+        method: 'POST',
+        body: JSON.stringify(zapierPayload),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }).catch(err => console.error('Zapier webhook error:', err));
+    } catch (error) {
+      console.error('Failed to send to Zapier:', error);
     }
     
     // Construct the WhatsApp payload
@@ -67,17 +85,17 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
       ? `Hello OUNJEEH! I'd like to place an order for *${productName || 'your produce'}*.` 
       : `Hello OUNJEEH! I have a general inquiry regarding your farm-to-table services.`;
     
-    const details = `\n\n*Customer Details:*\n👤 Name: ${formData.name}\n📧 Email: ${formData.email}\n📞 Phone: ${formData.phone}\n📍 Location: ${formData.location}\n📝 Note: ${formData.message || 'No additional note'}`;
+    const details = `\n\n*Customer Details:*\n👤 Name: ${formData.name}\n📧 Email: ${formData.email}\n📞 Phone: ${formData.phone}\n Note: ${formData.message || 'No additional note'}`;
     
     const encodedMsg = encodeURIComponent(intro + details);
-    const finalWhatsappLink = `https://wa.me/2348123456789?text=${encodedMsg}`;
+    const finalWhatsappLink = `https://wa.me/message/2UGF44KYKI3UH1?text=${encodedMsg}`;
 
     // Redirect to WhatsApp
     window.open(finalWhatsappLink, '_blank');
     onClose();
     
     // Reset form state
-    setFormData({ name: '', email: '', phone: '', location: '', message: '' });
+    setFormData({ name: '', email: '', phone: '', message: '' });
     setErrors({});
   };
 
@@ -149,41 +167,22 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
             {errors.email && <p id="email-error" className="text-red-500 text-xs ml-2 mt-1">{errors.email}</p>}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="space-y-1">
-              <label htmlFor="inquiry-phone" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">
-                Phone Number *
-              </label>
-              <input 
-                id="inquiry-phone"
-                required
-                type="tel" 
-                placeholder="080 000 0000"
-                className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border ${errors.phone ? 'border-red-400' : 'border-slate-100'} focus:border-demmy-green focus:bg-white transition-all outline-none text-slate-700 font-medium`}
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                aria-invalid={!!errors.phone}
-                aria-describedby={errors.phone ? "phone-error" : undefined}
-              />
-              {errors.phone && <p id="phone-error" className="text-red-500 text-xs ml-2 mt-1">{errors.phone}</p>}
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="inquiry-location" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">
-                Location *
-              </label>
-              <input 
-                id="inquiry-location"
-                required
-                type="text" 
-                placeholder="Lagos, Nigeria"
-                className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border ${errors.location ? 'border-red-400' : 'border-slate-100'} focus:border-demmy-green focus:bg-white transition-all outline-none text-slate-700 font-medium`}
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                aria-invalid={!!errors.location}
-                aria-describedby={errors.location ? "location-error" : undefined}
-              />
-              {errors.location && <p id="location-error" className="text-red-500 text-xs ml-2 mt-1">{errors.location}</p>}
-            </div>
+          <div className="space-y-1">
+            <label htmlFor="inquiry-phone" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">
+              Phone Number *
+            </label>
+            <input 
+              id="inquiry-phone"
+              required
+              type="tel" 
+              placeholder="080 000 0000"
+              className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border ${errors.phone ? 'border-red-400' : 'border-slate-100'} focus:border-demmy-green focus:bg-white transition-all outline-none text-slate-700 font-medium`}
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
+              aria-invalid={!!errors.phone}
+              aria-describedby={errors.phone ? "phone-error" : undefined}
+            />
+            {errors.phone && <p id="phone-error" className="text-red-500 text-xs ml-2 mt-1">{errors.phone}</p>}
           </div>
 
           <div className="space-y-1">

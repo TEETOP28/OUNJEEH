@@ -3,8 +3,7 @@ import { Product, Category, ServingBlock, Testimonial } from './types';
 
 export const BRAND_NAME = "OUNJEEH" as const;
 export const PARENT_COMPANY = "Demmy Agro-Allied Ventures" as const;
-export const WHATSAPP_NUMBER = "2348123456789" as const; 
-export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=Hello!%20I'm%20interested%20in%20ordering%20produce%20from%20OUNJEEH.` as const;
+export const WHATSAPP_LINK = "https://wa.me/message/2UGF44KYKI3UH1" as const;
 export const INQUIRY_FORM_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSdF9gL_t0-IOkXKhULhRLIh9Xg0yi1mbzTLcxuYXPO2F7WYYw/viewform?usp=sf_link" as const;
 
 export const CATEGORIES: Category[] = [
