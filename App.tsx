@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CATEGORIES, PRODUCTS, SERVING_BLOCKS, BRAND_NAME, PARENT_COMPANY } from './constants';
+import { CATEGORIES, PRODUCTS, SERVING_BLOCKS, BRAND_NAME, PARENT_COMPANY, getProductImage } from './constants';
 import { CategoryId, InquiryMode } from './types';
 import { Button } from './components/Button';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -12,6 +12,8 @@ import { TestimonialsSection } from './components/TestimonialsSection';
 import { OptimizedImage } from './components/OptimizedImage';
 import { Logo } from './components/Logo';
 import { useScrollAnimation } from './hooks/useScrollAnimation';
+import { AdminPage } from './AdminPage';
+import { TeamSection } from './components/TeamSection';
 
 // Animated Section Wrapper Component
 const AnimatedSection: React.FC<{ children: React.ReactNode; className?: string; id?: string }> = ({ children, className = '', id }) => {
@@ -38,6 +40,7 @@ export default function App() {
   const [inquiryMode, setInquiryMode] = useState<InquiryMode>('inquiry');
   const [selectedProduct, setSelectedProduct] = useState<string | undefined>();
   const [hasTriggered, setHasTriggered] = useState(false);
+  const [currentPage, setCurrentPage] = useState<'home' | 'admin'>('home');
 
   const filteredProducts = activeCategory === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === activeCategory);
 
@@ -46,6 +49,22 @@ export default function App() {
     setSelectedProduct(productName);
     setIsInquiryModalOpen(true);
   };
+
+  // Handle URL hash routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#admin') {
+        setCurrentPage('admin');
+      } else {
+        setCurrentPage('home');
+      }
+    };
+
+    handleHashChange(); // Check initial hash
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -70,6 +89,15 @@ export default function App() {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [hasTriggered]);
+
+  // Show admin page if navigated to #admin
+  if (currentPage === 'admin') {
+    return (
+      <ErrorBoundary>
+        <AdminPage />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>
@@ -264,7 +292,7 @@ export default function App() {
               >
                 <div className="relative h-80 overflow-hidden rounded-[3rem] mb-8">
                   <OptimizedImage 
-                    src={product.image} 
+                    src={getProductImage(product.id, product.image)} 
                     alt={product.name} 
                     className="w-full h-full group-hover:scale-110 transition-transform duration-700 ease-in-out" 
                     width={400}
@@ -338,6 +366,9 @@ export default function App() {
 
       {/* Testimonials Section */}
       <TestimonialsSection />
+
+      {/* Team Section - Hidden until team members are added */}
+      {/* <TeamSection /> */}
 
       {/* Footer */}
       <footer className="py-32 bg-white border-t border-demmy-green/5">

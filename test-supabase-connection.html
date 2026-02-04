@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0a5c36;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #0a5c36;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #084428;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0a5c36;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #0a5c36;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Supabase Connection Test</h1>
+        <p>Project: <code>tlvjrobirzrhnfbsaycr</code></p>
+        
+        <div id="results"></div>
+        
+        <button onclick="testConnection()">Test Connection</button>
+        <button onclick="checkBucket()">Check Storage Bucket</button>
+        
+        <div class="step">
+            <h3>📋 Setup Checklist:</h3>
+            <ol>
+                <li>✅ Credentials added to .env file</li>
+                <li>⏳ Create storage bucket (test below)</li>
+                <li>⏳ Make bucket public</li>
+                <li>⏳ Test upload functionality</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🪣 How to Create Storage Bucket:</h3>
+            <ol>
+                <li>Go to <a href="https://app.supabase.com/project/tlvjrobirzrhnfbsaycr/storage/buckets" target="_blank">Supabase Storage</a></li>
+                <li>Click <strong>"New bucket"</strong></li>
+                <li>Name: <code>product-images</code></li>
+                <li><strong>Toggle "Public bucket" ON ✅</strong></li>
+                <li>Click <strong>"Create bucket"</strong></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://tlvjrobirzrhnfbsaycr.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsdmpyb2JpcnpyaG5mYnNheWNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMjU3NDAsImV4cCI6MjA4NTgwMTc0MH0.lk_NqoQhcIbWW-uPeaQ3TbuUiV897GZrYPIV3iqXR80';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const resultsDiv = document.getElementById('results');
+
+        async function testConnection() {
+            resultsDiv.innerHTML = '<div class="status info">Testing connection... <span class="loading"></span></div>';
+            
+            try {
+                // Test connection by checking auth
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Connection Error: ${error.message}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ <strong>Connection Successful!</strong><br>
+                            Your Supabase credentials are working correctly.
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ Connection Failed: ${err.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function checkBucket() {
+            resultsDiv.innerHTML = '<div class="status info">Checking storage bucket... <span class="loading"></span></div>';
+            
+            try {
+                // List all buckets
+                const { data: buckets, error } = await supabase.storage.listBuckets();
+                
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Error checking buckets: ${error.message}
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Check if product-images bucket exists
+                const productBucket = buckets.find(b => b.name === 'product-images');
+                
+                if (productBucket) {
+                    const isPublic = productBucket.public;
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ <strong>Bucket Found!</strong><br>
+                            Name: <code>product-images</code><br>
+                            Public: ${isPublic ? '✅ Yes' : '❌ No (you need to make it public!)'}<br>
+                            ID: ${productBucket.id}
+                        </div>
+                        ${!isPublic ? '<div class="status warning">⚠️ Make the bucket public for images to display!</div>' : ''}
+                    `;
+                } else {
+                    const bucketList = buckets.map(b => `<li>${b.name} (${b.public ? 'public' : 'private'})</li>`).join('');
+                    resultsDiv.innerHTML = `
+                        <div class="status warning">
+                            ⚠️ <strong>Bucket Not Found</strong><br>
+                            The <code>product-images</code> bucket doesn't exist yet.
+                        </div>
+                        <div class="status info">
+                            <strong>Existing buckets:</strong>
+                            ${bucketList ? '<ul>' + bucketList + '</ul>' : '<p>No buckets created yet.</p>'}
+                        </div>
+                        <div class="status warning">
+                            <strong>Create it now:</strong><br>
+                            1. <a href="https://app.supabase.com/project/tlvjrobirzrhnfbsaycr/storage/buckets" target="_blank">Go to Storage</a><br>
+                            2. Click "New bucket"<br>
+                            3. Name: product-images<br>
+                            4. Make it PUBLIC ✅<br>
+                            5. Click Create
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ Error: ${err.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            testConnection();
+        };
+    </script>
+</body>
+</html>

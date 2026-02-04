@@ -1,6 +1,17 @@
 
 import { Product, Category, ServingBlock, Testimonial } from './types';
 
+/**
+ * Get product image URL - checks for uploaded images first, then falls back to default
+ */
+export const getProductImage = (productId: string, defaultImage: string): string => {
+  if (typeof window !== 'undefined') {
+    const imageMap = JSON.parse(localStorage.getItem('productImages') || '{}');
+    return imageMap[productId] || defaultImage;
+  }
+  return defaultImage;
+};
+
 export const BRAND_NAME = "OUNJEEH" as const;
 export const PARENT_COMPANY = "Demmy Agro-Allied Ventures" as const;
 export const WHATSAPP_LINK = "https://wa.me/message/2UGF44KYKI3UH1" as const;

@@ -3,11 +3,24 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not found. Image loading from Supabase will not work.');
+// Check if credentials are placeholder values or missing
+const isValidUrl = supabaseUrl && 
+  supabaseUrl.startsWith('http') && 
+  !supabaseUrl.includes('your-project-url');
+
+const isValidKey = supabaseAnonKey && 
+  !supabaseAnonKey.includes('your-anon-key');
+
+if (!isValidUrl || !isValidKey) {
+  console.warn('⚠️ Supabase credentials not configured. Using mock client. Image upload features will not work.');
+  console.warn('To enable Supabase: Update .env file with your actual Supabase credentials');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Use dummy URL if not configured to prevent initialization error
+const finalUrl = isValidUrl ? supabaseUrl : 'https://placeholder.supabase.co';
+const finalKey = isValidKey ? supabaseAnonKey : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.placeholder';
+
+export const supabase = createClient(finalUrl, finalKey);
 
 /**
  * Get the public URL for an image from Supabase Storage

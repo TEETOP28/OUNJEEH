@@ -56,8 +56,8 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
       return;
     }
     
-    // Prepare data payload for Zapier
-    const zapierPayload = {
+    // Prepare data payload for Google Sheets
+    const formPayload = {
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
@@ -67,17 +67,17 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
       timestamp: new Date().toISOString()
     };
     
-    // Send data to Zapier webhook (non-blocking)
+    // Send data to Google Sheets web app (non-blocking)
     try {
-      fetch('https://hooks.zapier.com/hooks/catch/23481197/ulimrqf/', {
+      fetch('https://script.google.com/macros/s/AKfycbzACmq99YdmfYWli6MH57zsWK2IdkH8hormb44SIRKUshI7tJ8JY96fGdSvfO_dd4kT/exec', {
         method: 'POST',
-        body: JSON.stringify(zapierPayload),
+        body: JSON.stringify(formPayload),
         headers: {
           'Content-Type': 'application/json'
         }
-      }).catch(err => console.error('Zapier webhook error:', err));
+      }).catch(err => console.error('Google Sheets webhook error:', err));
     } catch (error) {
-      console.error('Failed to send to Zapier:', error);
+      console.error('Failed to send to Google Sheets:', error);
     }
     
     // Construct the WhatsApp payload
@@ -187,7 +187,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
 
           <div className="space-y-1">
             <label htmlFor="inquiry-message" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">
-              Notes
+              Message
             </label>
             <textarea 
               id="inquiry-message"
