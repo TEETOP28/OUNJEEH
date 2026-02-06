@@ -1,16 +1,8 @@
 
 import { Product, Category, ServingBlock, Testimonial } from './types';
 
-/**
- * Get product image URL - checks for uploaded images first, then falls back to default
- */
-export const getProductImage = (productId: string, defaultImage: string): string => {
-  if (typeof window !== 'undefined') {
-    const imageMap = JSON.parse(localStorage.getItem('productImages') || '{}');
-    return imageMap[productId] || defaultImage;
-  }
-  return defaultImage;
-};
+// Product images will be loaded dynamically from Supabase
+// No more hardcoded image URLs needed
 
 export const BRAND_NAME = "OUNJEEH" as const;
 export const PARENT_COMPANY = "Demmy Agro-Allied Ventures" as const;
@@ -32,7 +24,7 @@ export const PRODUCTS: Product[] = [
     description: 'Triple-sorted, stone-free, and naturally sweet. Direct from farm harvest.',
     category: 'grains',
     tags: ['Home', 'Retail'],
-    image: 'https://images.unsplash.com/photo-1551462147-ff29053fab3e?auto=format&fit=crop&q=80&w=800',
+    image: '', // Will be loaded from Supabase
     details: '💡 Best for Gbegiri soup or local porridge. Sourced from North-Central Nigeria.'
   },
   {
@@ -42,7 +34,7 @@ export const PRODUCTS: Product[] = [
     description: 'Properly parboiled, sand-free rice that swells perfectly for family meals.',
     category: 'grains',
     tags: ['Home', 'Business'],
-    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=800',
+    image: '', // Will be loaded from Supabase
     details: '💡 Ideal for authentic Party Jollof. Parboiled with zero chemical additives.'
   },
   {
@@ -52,7 +44,7 @@ export const PRODUCTS: Product[] = [
     description: 'Finely milled and sun-dried. The gold standard for smooth, dark Amala.',
     category: 'processed',
     tags: ['Home', 'Retail'],
-    image: 'https://images.unsplash.com/photo-1626197031507-c17099753214?auto=format&fit=crop&q=80&w=800',
+    image: '', // Will be loaded from Supabase
     details: '💡 Traditional milling from aged yams for that premium dark texture.'
   },
   {
@@ -62,7 +54,7 @@ export const PRODUCTS: Product[] = [
     description: 'Unadulterated, low-acid, and richly colored red oil from the first press.',
     category: 'oils',
     tags: ['Retail', 'Business'],
-    image: 'https://images.unsplash.com/photo-1594910413554-e696f5b3f26e?auto=format&fit=crop&q=80&w=800',
+    image: '', // Will be loaded from Supabase
     details: '💡 Sourced from virgin presses in Oyo state. High in natural Vitamin A.'
   },
   {
@@ -72,7 +64,7 @@ export const PRODUCTS: Product[] = [
     description: 'Dry, crispy, and perfectly fermented for that authentic sharp taste.',
     category: 'processed',
     tags: ['Home', 'Retail'],
-    image: 'https://images.unsplash.com/photo-1600333859399-247514167993?auto=format&fit=crop&q=80&w=800',
+    image: '', // Will be loaded from Supabase
     details: '💡 Ijebu-style fermentation. Extra dry for drinking or solid Eba.'
   },
   {
@@ -82,7 +74,7 @@ export const PRODUCTS: Product[] = [
     description: 'Oven-dried to preserve nutrients. Clean, sand-free, and vacuum sealed.',
     category: 'proteins',
     tags: ['Home', 'Business'],
-    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=800',
+    image: '', // Will be loaded from Supabase
     details: '💡 Traditionally smoked to remove 98% moisture. Sand-free and grit-free.'
   }
 ];

@@ -45,6 +45,14 @@ export const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
     setUploading(true);
 
     try {
+      // Get product details
+      const product = PRODUCTS.find(p => p.id === selectedProduct);
+      if (!product) {
+        setError('Product not found');
+        setUploading(false);
+        return;
+      }
+
       // Upload image to Supabase Storage
       const uploadResult = await uploadImageToStorage(
         file,
@@ -58,10 +66,21 @@ export const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
         return;
       }
 
-      // Store the mapping in localStorage (temporary solution)
-      const imageMap = JSON.parse(localStorage.getItem('productImages') || '{}');
-      imageMap[selectedProduct] = uploadResult.imageUrl;
-      localStorage.setItem('productImages', JSON.stringify(imageMap));
+      // Save to database (this makes it permanent!)
+      const { saveProductImage } = await import('../lib/imageUpload');
+      const dbResult = await saveProductImage({
+        productId: selectedProduct,
+        productName: product.name,
+        imagePath: uploadResult.imagePath!,
+        imageUrl: uploadResult.imageUrl!,
+        isPrimary: true
+      });
+
+      if (!dbResult.success) {
+        setError('Image uploaded but failed to save to database: ' + dbResult.error);
+        setUploading(false);
+        return;
+      }
 
       setSuccess('Product image uploaded successfully! Refresh the page to see changes.');
       

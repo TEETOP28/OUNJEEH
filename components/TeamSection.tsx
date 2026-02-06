@@ -20,10 +20,12 @@ export const TeamSection: React.FC = () => {
       try {
         setLoading(true);
         const members = await fetchTeamMembers();
+        console.log('✅ Fetched team members:', members);
+        console.log('📸 Image URLs:', members.map(m => m.image_url));
         setTeamMembers(members);
       } catch (err) {
         setError('Failed to load team members');
-        console.error(err);
+        console.error('❌ Error loading team members:', err);
       } finally {
         setLoading(false);
       }

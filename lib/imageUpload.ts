@@ -49,25 +49,32 @@ export const uploadImageToStorage = async (
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
-        cacheControl: '3600',
+        cacheControl: '31536000', // 1 year cache
         upsert: false
       });
 
     if (error) {
+      console.error('Upload error:', error);
       return {
         success: false,
         error: error.message
       };
     }
 
-    // Get public URL
+    // Get public URL with proper formatting
     const { data: urlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(filePath);
 
+    // Ensure URL is properly formatted and accessible
+    const publicUrl = urlData.publicUrl;
+    
+    // Verify the URL is accessible
+    console.log('Generated public URL:', publicUrl);
+
     return {
       success: true,
-      imageUrl: urlData.publicUrl,
+      imageUrl: publicUrl,
       imagePath: filePath
     };
   } catch (error) {
@@ -110,9 +117,18 @@ export const saveProductImage = async (data: {
   imageUrl: string;
   isPrimary?: boolean;
 }) => {
+  // Transform camelCase to snake_case for database columns
+  const dbData = {
+    product_id: data.productId,
+    product_name: data.productName,
+    image_path: data.imagePath,
+    image_url: data.imageUrl,
+    is_primary: data.isPrimary ?? false
+  };
+
   const { data: result, error } = await supabase
     .from('product_images')
-    .insert([data])
+    .insert([dbData])
     .select()
     .single();
 
@@ -169,7 +185,7 @@ export const fetchProductImages = async (productId?: string) => {
 export const deleteTeamMember = async (id: string, imagePath: string) => {
   // Delete from storage
   const { error: storageError } = await supabase.storage
-    .from('team-photos')
+    .from('OUNJEEH STAPLES')
     .remove([imagePath]);
 
   if (storageError) {

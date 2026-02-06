@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CATEGORIES, PRODUCTS, SERVING_BLOCKS, BRAND_NAME, PARENT_COMPANY, getProductImage } from './constants';
+import { CATEGORIES, PRODUCTS, SERVING_BLOCKS, BRAND_NAME, PARENT_COMPANY } from './constants';
 import { CategoryId, InquiryMode } from './types';
 import { Button } from './components/Button';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -13,7 +13,7 @@ import { OptimizedImage } from './components/OptimizedImage';
 import { Logo } from './components/Logo';
 import { useScrollAnimation } from './hooks/useScrollAnimation';
 import { AdminPage } from './AdminPage';
-import { TeamSection } from './components/TeamSection';
+import { useProductImages } from './hooks/useProductImages';
 
 // Animated Section Wrapper Component
 const AnimatedSection: React.FC<{ children: React.ReactNode; className?: string; id?: string }> = ({ children, className = '', id }) => {
@@ -42,7 +42,10 @@ export default function App() {
   const [hasTriggered, setHasTriggered] = useState(false);
   const [currentPage, setCurrentPage] = useState<'home' | 'admin'>('home');
 
-  const filteredProducts = activeCategory === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === activeCategory);
+  // Load product images from Supabase database
+  const { products: productsWithImages, loading: imagesLoading } = useProductImages(PRODUCTS);
+
+  const filteredProducts = activeCategory === 'all' ? productsWithImages : productsWithImages.filter(p => p.category === activeCategory);
 
   const handleOpenInquiry = (mode: InquiryMode, productName?: string) => {
     setInquiryMode(mode);
@@ -120,12 +123,8 @@ export default function App() {
       <section className="relative min-h-screen flex items-center pt-48 pb-40 overflow-hidden">
         <div className="absolute top-0 right-0 w-full lg:w-1/2 h-full -z-10">
           <div className="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-demmy-cream via-demmy-cream/20 to-transparent z-10 pointer-events-none"></div>
-          <OptimizedImage 
-            src="https://images.unsplash.com/photo-1543083477-4f7fe0da244d?auto=format&fit=crop&q=80&w=2000" 
-            alt="Authentic Nigerian Staples" 
-            className="w-full h-full grayscale-[2%] hover:grayscale-0 transition-all duration-1000"
-            loading="eager"
-          />
+          {/* Hero image - Upload your own via admin panel or replace with local image */}
+          <div className="w-full h-full bg-demmy-light"></div>
         </div>
         
         <div className="container mx-auto px-6 md:px-12 relative z-20">
@@ -292,7 +291,7 @@ export default function App() {
               >
                 <div className="relative h-80 overflow-hidden rounded-[3rem] mb-8">
                   <OptimizedImage 
-                    src={getProductImage(product.id, product.image)} 
+                    src={product.image} 
                     alt={product.name} 
                     className="w-full h-full group-hover:scale-110 transition-transform duration-700 ease-in-out" 
                     width={400}
@@ -366,9 +365,6 @@ export default function App() {
 
       {/* Testimonials Section */}
       <TestimonialsSection />
-
-      {/* Team Section - Hidden until team members are added */}
-      {/* <TeamSection /> */}
 
       {/* Footer */}
       <footer className="py-32 bg-white border-t border-demmy-green/5">

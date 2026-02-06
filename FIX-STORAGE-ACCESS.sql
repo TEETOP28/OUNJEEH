@@ -1,0 +1,41 @@
+-- ============================================
+-- FIX: Supabase Storage Access Issues
+-- ============================================
+-- NOTE: You CANNOT run this SQL directly in Supabase!
+-- Storage policies must be set through the Dashboard UI.
+--
+-- INSTEAD, follow these steps in Supabase Dashboard:
+--
+-- 1. Go to Storage → Click "OUNJEEH STAPLES" bucket
+-- 2. Click "Policies" tab at the top
+-- 3. Click "New Policy"
+-- 4. Choose "For full customization create a policy from scratch"
+-- 
+-- CREATE THESE TWO POLICIES:
+--
+-- Policy 1: Public Read Access
+-- --------------------------
+-- Policy Name: Public read access
+-- Allowed operation: SELECT
+-- Target roles: public
+-- USING expression: true
+-- WITH CHECK expression: (leave empty)
+--
+-- Policy 2: Public Upload (for development)
+-- --------------------------
+-- Policy Name: Public upload
+-- Allowed operation: INSERT
+-- Target roles: public  
+-- USING expression: (leave empty)
+-- WITH CHECK expression: true
+--
+-- ============================================
+-- ALTERNATIVE: Make bucket fully public
+-- ============================================
+-- Even simpler approach:
+-- 1. Go to Storage → Click "OUNJEEH STAPLES" bucket
+-- 2. Click the gear icon (Settings)
+-- 3. Toggle "Public bucket" to ON
+-- 4. Save
+--
+-- This makes all files in the bucket publicly accessible!

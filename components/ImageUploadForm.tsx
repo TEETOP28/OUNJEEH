@@ -52,7 +52,7 @@ export const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
       // Step 1: Upload image to Supabase Storage
       const uploadResult = await uploadImageToStorage(
         formData.file,
-        'team-photos',
+        'OUNJEEH STAPLES',
         'members'
       );
 
