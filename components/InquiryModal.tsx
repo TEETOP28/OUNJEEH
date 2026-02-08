@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './Button';
 import { InquiryMode } from '../types';
+import { supabase } from '../lib/supabase';
+import { getStates, getCitiesByState } from '../lib/locations';
 
 interface InquiryModalProps {
   isOpen: boolean;
@@ -13,6 +15,8 @@ interface FormData {
   name: string;
   email: string;
   phone: string;
+  state: string;
+  city: string;
   message: string;
 }
 
@@ -21,10 +25,30 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
     name: '',
     email: '',
     phone: '',
+    state: '',
+    city: '',
     message: ''
   });
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const states = getStates();
+
+  // Update available cities when state changes
+  useEffect(() => {
+    if (formData.state) {
+      const cities = getCitiesByState(formData.state);
+      setAvailableCities(cities);
+      // Reset city if it's not in the new state's cities
+      if (formData.city && !cities.includes(formData.city)) {
+        setFormData(prev => ({ ...prev, city: '' }));
+      }
+    } else {
+      setAvailableCities([]);
+      setFormData(prev => ({ ...prev, city: '' }));
+    }
+  }, [formData.state]);
 
   if (!isOpen) return null;
 
@@ -45,6 +69,14 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
       newErrors.phone = 'Please enter a valid phone number';
     }
     
+    if (!formData.state) {
+      newErrors.state = 'Please select your state';
+    }
+    
+    if (!formData.city) {
+      newErrors.city = 'Please select your city';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -56,47 +88,53 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
       return;
     }
     
-    // Prepare data payload for Google Sheets
-    const formPayload = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      message: formData.message,
-      mode: mode,
-      productName: productName || 'N/A',
-      timestamp: new Date().toISOString()
-    };
+    setIsSubmitting(true);
     
-    // Send data to Google Sheets web app (non-blocking)
     try {
-      fetch('https://script.google.com/macros/s/AKfycbzACmq99YdmfYWli6MH57zsWK2IdkH8hormb44SIRKUshI7tJ8JY96fGdSvfO_dd4kT/exec', {
-        method: 'POST',
-        body: JSON.stringify(formPayload),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }).catch(err => console.error('Google Sheets webhook error:', err));
+      // Save data to Supabase
+      const { error } = await supabase
+        .from('inquiries')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            state: formData.state,
+            city: formData.city,
+            message: formData.message || null,
+            mode: mode,
+            product_name: productName || null
+          }
+        ]);
+      
+      if (error) {
+        console.error('Error saving to Supabase:', error);
+        alert('There was an error saving your information. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Show success message
+      const successMessage = mode === 'order' 
+        ? `Thank you! Your order for ${productName} has been received. Redirecting to WhatsApp...`
+        : `Thank you! Your inquiry has been received. Redirecting to WhatsApp...`;
+      
+      alert(successMessage);
+      
+      // Redirect to WhatsApp without pre-filled message
+      window.open('https://wa.me/message/2UGF44KYKI3UH1', '_blank');
+      
+      onClose();
+      
+      // Reset form state
+      setFormData({ name: '', email: '', phone: '', state: '', city: '', message: '' });
+      setErrors({});
     } catch (error) {
-      console.error('Failed to send to Google Sheets:', error);
+      console.error('Failed to submit form:', error);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Construct the WhatsApp payload
-    const intro = mode === 'order' 
-      ? `Hello OUNJEEH! I'd like to place an order for *${productName || 'your produce'}*.` 
-      : `Hello OUNJEEH! I have a general inquiry regarding your farm-to-table services.`;
-    
-    const details = `\n\n*Customer Details:*\n👤 Name: ${formData.name}\n📧 Email: ${formData.email}\n📞 Phone: ${formData.phone}\n Note: ${formData.message || 'No additional note'}`;
-    
-    const encodedMsg = encodeURIComponent(intro + details);
-    const finalWhatsappLink = `https://wa.me/message/2UGF44KYKI3UH1?text=${encodedMsg}`;
-
-    // Redirect to WhatsApp
-    window.open(finalWhatsappLink, '_blank');
-    onClose();
-    
-    // Reset form state
-    setFormData({ name: '', email: '', phone: '', message: '' });
-    setErrors({});
   };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -119,8 +157,8 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
         onClick={onClose}
         aria-hidden="true"
       ></div>
-      <div className="relative w-full max-w-xl bg-white rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
-        <div className="harvest-gradient p-10 text-white text-center relative overflow-hidden">
+      <div className="relative w-full max-w-xl max-h-[90vh] bg-white rounded-[3rem] shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col overflow-hidden">
+        <div className="harvest-gradient p-10 text-white text-center relative overflow-hidden flex-shrink-0">
            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
            <h3 id="inquiry-modal-title" className="font-serif text-3xl mb-2 relative z-10">
              {mode === 'order' ? 'Confirm Your Order' : 'Speak with Sales'}
@@ -130,7 +168,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
            </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 md:p-10 space-y-5" noValidate>
+        <form onSubmit={handleSubmit} className="p-8 md:p-10 space-y-5 overflow-y-auto flex-1" noValidate>
           <div className="space-y-1">
             <label htmlFor="inquiry-name" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">
               Full Name *
@@ -185,6 +223,51 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
             {errors.phone && <p id="phone-error" className="text-red-500 text-xs ml-2 mt-1">{errors.phone}</p>}
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label htmlFor="inquiry-state" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">
+                State *
+              </label>
+              <select
+                id="inquiry-state"
+                required
+                className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border ${errors.state ? 'border-red-400' : 'border-slate-100'} focus:border-demmy-green focus:bg-white transition-all outline-none text-slate-700 font-medium`}
+                value={formData.state}
+                onChange={(e) => handleInputChange('state', e.target.value)}
+                aria-invalid={!!errors.state}
+                aria-describedby={errors.state ? "state-error" : undefined}
+              >
+                <option value="">Select State</option>
+                {states.map((state) => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </select>
+              {errors.state && <p id="state-error" className="text-red-500 text-xs ml-2 mt-1">{errors.state}</p>}
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="inquiry-city" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">
+                City/Area *
+              </label>
+              <select
+                id="inquiry-city"
+                required
+                disabled={!formData.state}
+                className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border ${errors.city ? 'border-red-400' : 'border-slate-100'} focus:border-demmy-green focus:bg-white transition-all outline-none text-slate-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
+                value={formData.city}
+                onChange={(e) => handleInputChange('city', e.target.value)}
+                aria-invalid={!!errors.city}
+                aria-describedby={errors.city ? "city-error" : undefined}
+              >
+                <option value="">{formData.state ? 'Select City' : 'Select State First'}</option>
+                {availableCities.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+              {errors.city && <p id="city-error" className="text-red-500 text-xs ml-2 mt-1">{errors.city}</p>}
+            </div>
+          </div>
+
           <div className="space-y-1">
             <label htmlFor="inquiry-message" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">
               Message
@@ -200,12 +283,16 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, mod
           </div>
 
           <div className="pt-2 flex flex-col gap-3">
-            <Button variant="primary" className="w-full py-5 rounded-2xl shadow-xl shadow-demmy-green/20">
-              Complete on WhatsApp
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-5 rounded-2xl bg-demmy-green text-white hover:bg-demmy-green/90 transition-all shadow-xl shadow-demmy-green/20 disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center justify-center"
+            >
+              {isSubmitting ? 'Submitting...' : 'Continue on WhatsApp'}
               <svg className="w-5 h-5 ml-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
               </svg>
-            </Button>
+            </button>
             <button 
               type="button" 
               onClick={onClose} 

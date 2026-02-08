@@ -1,18 +1,32 @@
 import React, { useState } from 'react';
 import { ProductImageUpload } from './components/ProductImageUpload';
+import { ProductManagement } from './components/ProductManagement';
 import { Button } from './components/Button';
 
 export const AdminPage: React.FC = () => {
-  const [showForm, setShowForm] = useState(false);
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [showProductManagement, setShowProductManagement] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleSuccess = () => {
-    setShowForm(false);
+    setShowUploadForm(false);
+    setShowProductManagement(false);
     setRefreshKey(prev => prev + 1);
     // Optionally reload the page or refresh team section
     setTimeout(() => {
       window.location.reload();
     }, 1500);
+  };
+
+  const handleClose = () => {
+    setShowUploadForm(false);
+    setShowProductManagement(false);
+  };
+
+  const handleBackToHome = () => {
+    // Clear hash and reload to refresh products
+    window.location.hash = '';
+    window.location.reload();
   };
 
   return (
@@ -21,15 +35,15 @@ export const AdminPage: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           {/* Back to Home Button */}
           <div className="mb-8">
-            <a 
-              href="#" 
+            <button
+              onClick={handleBackToHome}
               className="inline-flex items-center gap-2 text-demmy-green hover:text-demmy-green/80 font-bold transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Back to Homepage
-            </a>
+            </button>
           </div>
 
           {/* Header */}
@@ -51,10 +65,10 @@ export const AdminPage: React.FC = () => {
           </div>
 
           {/* Action Cards */}
-          {!showForm && (
+          {!showUploadForm && !showProductManagement && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               <button
-                onClick={() => setShowForm(true)}
+                onClick={() => setShowUploadForm(true)}
                 className="group relative overflow-hidden bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 p-8 text-left border-2 border-transparent hover:border-demmy-green"
               >
                 <div className="relative z-10">
@@ -74,23 +88,23 @@ export const AdminPage: React.FC = () => {
               </button>
 
               <button
-                onClick={() => alert('Product upload feature coming soon!')}
+                onClick={() => setShowProductManagement(true)}
                 className="group relative overflow-hidden bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 p-8 text-left border-2 border-transparent hover:border-demmy-green"
               >
                 <div className="relative z-10">
                   <div className="w-16 h-16 bg-demmy-light rounded-2xl flex items-center justify-center mb-4 group-hover:bg-demmy-green transition-colors">
                     <svg className="w-8 h-8 text-demmy-green group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                   </div>
                   <h3 className="text-2xl font-bold text-demmy-green mb-2">
-                    Add Product Image
+                    Manage Products
                   </h3>
                   <p className="text-slate-600">
-                    Upload product photos and descriptions
+                    Add, edit, or delete products with full control
                   </p>
-                  <span className="inline-block mt-2 text-xs font-bold text-demmy-green bg-demmy-light px-3 py-1 rounded-full">
-                    Coming Soon
+                  <span className="inline-block mt-2 text-xs font-bold text-white bg-demmy-green px-3 py-1 rounded-full">
+                    Create • Edit • Delete
                   </span>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-demmy-light/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -99,17 +113,26 @@ export const AdminPage: React.FC = () => {
           )}
 
           {/* Upload Form */}
-          {showForm && (
+          {showUploadForm && (
             <div className="animate-fadeIn">
               <ProductImageUpload
                 onSuccess={handleSuccess}
-                onClose={() => setShowForm(false)}
+                onClose={handleClose}
+              />
+            </div>
+          )}
+
+          {/* Product Management */}
+          {showProductManagement && (
+            <div className="animate-fadeIn">
+              <ProductManagement
+                onClose={handleClose}
               />
             </div>
           )}
 
           {/* Instructions */}
-          {!showForm && (
+          {!showUploadForm && !showProductManagement && (
             <div className="mt-12 bg-white rounded-3xl shadow-xl p-8">
               <h2 className="text-2xl font-bold text-demmy-green mb-4">
                 📝 Setup Instructions

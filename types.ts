@@ -12,6 +12,8 @@ export interface Product {
   tags: ProductTag[];
   image: string;
   details?: string;
+  price?: number;
+  stockStatus?: string;
 }
 
 export interface Category {

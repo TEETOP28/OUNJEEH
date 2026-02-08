@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CATEGORIES, PRODUCTS, SERVING_BLOCKS, BRAND_NAME, PARENT_COMPANY } from './constants';
+import { CATEGORIES, SERVING_BLOCKS, BRAND_NAME, PARENT_COMPANY } from './constants';
 import { CategoryId, InquiryMode } from './types';
 import { Button } from './components/Button';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -13,7 +13,7 @@ import { OptimizedImage } from './components/OptimizedImage';
 import { Logo } from './components/Logo';
 import { useScrollAnimation } from './hooks/useScrollAnimation';
 import { AdminPage } from './AdminPage';
-import { useProductImages } from './hooks/useProductImages';
+import { useProductsFromDatabase } from './hooks/useProductsFromDatabase';
 
 // Animated Section Wrapper Component
 const AnimatedSection: React.FC<{ children: React.ReactNode; className?: string; id?: string }> = ({ children, className = '', id }) => {
@@ -42,8 +42,8 @@ export default function App() {
   const [hasTriggered, setHasTriggered] = useState(false);
   const [currentPage, setCurrentPage] = useState<'home' | 'admin'>('home');
 
-  // Load product images from Supabase database
-  const { products: productsWithImages, loading: imagesLoading } = useProductImages(PRODUCTS);
+  // Load ALL products from Supabase database (including new products created in admin)
+  const { products: productsWithImages, loading: imagesLoading } = useProductsFromDatabase();
 
   const filteredProducts = activeCategory === 'all' ? productsWithImages : productsWithImages.filter(p => p.category === activeCategory);
 
